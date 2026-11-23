@@ -13,15 +13,27 @@ app.use((req, res, next) => {
 app.get(['/', '/api'], async (req, res) => {
   const url = req.query.url;
   if (!url) return res.json({ status: "Engine is LIVE!" });
-  try {
-    const r = await axios.get('https://www.tikwm.com/api/?url=' + encodeURIComponent(url), { timeout: 20000, headers: { 'User-Agent': 'Mozilla/5.0' } });
-    let d = r.data?.data;
-    let dl = d?.play || d?.wmplay || d?.music;
-    if (dl) return res.json({ success: true, download_url: dl, title: d?.title, author: d?.author?.nickname, cover: d?.cover });
-    return res.json({ success: false, message: "Video nahi mili", raw: r.data });
-  } catch (e) {
-    return res.json({ success: false, error: e.message });
+
+  // 4 alag API try karenge, jo pehle jawab dega wo jeetega
+  const apis = [
+    'https://www.tikwm.com/api/?url=' + encodeURIComponent(url),
+    'https://api.tikwm.com/api/?url=' + encodeURIComponent(url),
+    'https://tikwm.com/api/?url=' + encodeURIComponent(url),
+    'https://api.tiklydown.eu.org/api/download?url=' + encodeURIComponent(url)
+  ];
+
+  for (let apiUrl of apis) {
+    try {
+      const r = await axios.get(apiUrl, { timeout: 7000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      let d = r.data?.data || r.data;
+      let dl = d?.play || d?.wmplay || d?.hdplay || d?.video?.no_watermark || d?.video?.play || d?.download_url || r.data?.result?.video;
+      let title = d?.title || r.data?.result?.title;
+      let cover = d?.cover || r.data?.result?.cover;
+      let author = d?.author?.nickname || r.data?.result?.author?.nickname;
+      if (dl) return res.json({ success: true, download_url: dl, title, author, cover });
+    } catch (e) { console.log('Fail:', apiUrl, e.message); continue; }
   }
+  return res.json({ success: false, message: "Sab API slow hain, 1 min baad dobara try karo" });
 });
 
 module.exports = app;
