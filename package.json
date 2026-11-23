@@ -1,10 +1,9 @@
 {
-  "name": "waqas-media-downloader-api",
+  "name": "waqas-multi-downloader",
   "version": "1.0.0",
-  "description": "Multi-source video downloader API proxy",
   "main": "api/index.js",
   "dependencies": {
-    "express": "^4.19.2",
-    "axios": "^1.7.2"
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
   }
 }
